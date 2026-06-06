@@ -1,13 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
 
 export default function ScoreRing({ score, size = 120, color = 'var(--accent)', label }) {
-  const [displayScore, setDisplayScore] = useState(0)
-  const [offset, setOffset] = useState(0)
-  const mounted = useRef(false)
-
   const strokeWidth = 8
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
+
+  const [displayScore, setDisplayScore] = useState(0)
+  const [offset, setOffset] = useState(circumference)
 
   /* Colour presets */
   const resolvedColor =
@@ -18,26 +17,27 @@ export default function ScoreRing({ score, size = 120, color = 'var(--accent)', 
     : color
 
   useEffect(() => {
-    if (mounted.current) return
-    mounted.current = true
-
-    const target = circumference - (score / 100) * circumference
-    requestAnimationFrame(() => setOffset(target))
+    const finalScore = score || 0
+    const target = circumference - (finalScore / 100) * circumference
+    const t1 = setTimeout(() => setOffset(target), 50)
 
     const duration = 1500
-    const step = Math.ceil(duration / score || 1)
+    const step = Math.ceil(duration / (finalScore || 1))
     let current = 0
     const timer = setInterval(() => {
       current += 1
-      if (current >= score) {
-        current = score
+      if (current >= finalScore) {
+        current = finalScore
         clearInterval(timer)
       }
       setDisplayScore(current)
     }, step)
 
-    return () => clearInterval(timer)
-  }, [])
+    return () => {
+      clearTimeout(t1)
+      clearInterval(timer)
+    }
+  }, [score, circumference])
 
   return (
     <div className="flex flex-col items-center gap-1" style={{ position: 'relative' }}>
