@@ -10,20 +10,22 @@ from pypdf import PdfReader
 import pytesseract
 from PIL import Image
 
-# Embedding model
-from sentence_transformers import SentenceTransformer
-
-# Supabase
-from supabase import create_client
-
 # Core
 from backend.core.config import MOCK_MODE, SUPABASE_URL, SUPABASE_SERVICE_KEY
 from backend.core.nova import invoke_nova
 
 router = APIRouter(prefix="/resume", tags=["resume"])
 
-# Load model once at module level
-model = SentenceTransformer('all-MiniLM-L6-v2')
+_model = None
+
+
+def get_embedding_model():
+    from sentence_transformers import SentenceTransformer
+
+    global _model
+    if _model is None:
+        _model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _model
 
 class ResumeReport(BaseModel):
     match_score: int
@@ -78,10 +80,12 @@ async def analyze_resume(
     resume_text = resume_text[:3000]
     
     # 4. Generate embedding
-    embedding = model.encode(resume_text).tolist()
+    embedding = get_embedding_model().encode(resume_text).tolist()
     
     # 5. Query Supabase pgvector
     try:
+        from supabase import create_client
+
         supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         
         # In a real environment, you might use an RPC call for vector similarity search

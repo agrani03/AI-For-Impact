@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom'
 
 const vapiPublicKey = import.meta.env.VITE_VAPI_PUBLIC_KEY || import.meta.env.NEXT_PUBLIC_VAPI_PUBLIC_KEY || ''
 const vapiAssistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID || ''
+const apiBaseUrl = import.meta.env.VITE_API_URL || import.meta.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 const vapi = vapiPublicKey ? new Vapi(vapiPublicKey) : null
 
 export default function InterviewPage() {
@@ -123,7 +124,7 @@ export default function InterviewPage() {
   const handleCodeSubmit = async ({ code, language }) => {
     setIsExecuting(true)
     try {
-      const response = await fetch('http://localhost:8000/code/execute', {
+      const response = await fetch(`${apiBaseUrl}/code/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code, language })
@@ -448,4 +449,3 @@ export default function InterviewPage() {
     </div>
   )
 }
-

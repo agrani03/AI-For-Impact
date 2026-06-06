@@ -1,5 +1,6 @@
 """Code execution service — evaluates coding challenges."""
 import json
+import sys
 import subprocess
 import tempfile
 import os
@@ -81,7 +82,7 @@ print(result)
 """
                 # Execute
                 result = subprocess.run(
-                    ['python3', '-c', test_code],
+                    [sys.executable, '-c', test_code],
                     capture_output=True,
                     text=True,
                     timeout=5

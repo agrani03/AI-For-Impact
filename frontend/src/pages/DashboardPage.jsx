@@ -67,9 +67,9 @@ export default function DashboardPage() {
           <Link to="/resume" className="flex items-center gap-3 px-4 py-3 rounded-xl text-[#555577] hover:bg-white/50 font-semibold transition-colors">
             <FileText className="w-5 h-5" /> Resume RAG
           </Link>
-          <button disabled className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-gray-400 font-semibold cursor-not-allowed">
+          <Link to="/jobs" className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[#555577] hover:bg-white/50 font-semibold transition-colors">
             <ShieldAlert className="w-5 h-5" /> Scam Detector
-          </button>
+          </Link>
         </nav>
 
         {/* User Card */}
@@ -144,16 +144,15 @@ export default function DashboardPage() {
           </div>
 
           {/* Card 4: Scam Detector */}
-          <div className="glass-card p-8 group relative overflow-hidden flex flex-col opacity-60">
-            <div className="absolute right-4 top-4 bg-gray-200 text-gray-500 text-xs font-bold px-3 py-1 rounded-full">Coming Soon</div>
+          <div className="glass-card p-8 group relative overflow-hidden flex flex-col">
             <div className="w-14 h-14 rounded-2xl bg-[#e94560]/10 text-[#e94560] flex items-center justify-center mb-6">
               <ShieldAlert className="w-7 h-7" />
             </div>
             <h2 className="text-2xl font-bold mb-2">Job Scam Detector</h2>
             <p className="text-[#555577] mb-8 flex-1">Paste a job URL and let ARIA detect red flags and verify company legitimacy.</p>
-            <button disabled className="btn-primary w-max bg-gray-300 cursor-not-allowed">
-              Locked
-            </button>
+            <Link to="/jobs" className="btn-primary w-max flex items-center gap-2 group-hover:scale-105" style={{ background: '#e94560' }}>
+              Verify Job <ChevronRight className="w-4 h-4" />
+            </Link>
           </div>
 
         </div>

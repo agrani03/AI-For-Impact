@@ -146,6 +146,19 @@ async def scan_job(
     if MOCK_MODE:
         mock_data = MOCK_REPORT.copy()
         mock_data["analyzed_at"] = datetime.now()
+        input_text = (description or url or "").lower()
+        detected_flags = [flag for flag in RED_FLAGS if flag in input_text]
+        detected_emails = extract_emails(description or url or "")
+        suspicious_emails = check_suspicious_emails(detected_emails)
+        if detected_flags or suspicious_emails:
+            risk = min(90, 35 + len(detected_flags) * 12 + (20 if suspicious_emails else 0))
+            mock_data["fake_job_score"] = risk
+            mock_data["trust_score"] = 100 - risk
+            mock_data["verdict"] = "SCAM" if risk >= 70 else "SUSPICIOUS"
+            mock_data["heuristic_flags"] = detected_flags
+            mock_data["suspicious_emails"] = suspicious_emails
+            mock_data["risk_factors"] = list(set(detected_flags + (["Recruiter is using free email provider"] if suspicious_emails else [])))
+            mock_data["reasoning"] = "Demo scan found common fraud indicators in the posting text."
         # If user uploaded a mock file, simulate QR scan
         if file:
             mock_data["ocr_text_extracted"] = True

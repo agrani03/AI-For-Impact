@@ -133,7 +133,7 @@ export default function LandingPage() {
                 </div>
                 <h3 className="text-2xl font-bold mb-3">Job Scam Detector</h3>
                 <p className="text-[#555577] leading-relaxed mb-6">Verify any job posting before you apply. Never get scammed again. ARIA checks over 20+ risk factors to ensure a job is legitimate.</p>
-                <Link to="/dashboard" className="text-[#560BAD] font-bold flex items-center gap-2 group-hover:gap-3 transition-all">Explore Feature <ArrowRight className="w-4 h-4" /></Link>
+                <Link to="/jobs" className="text-[#560BAD] font-bold flex items-center gap-2 group-hover:gap-3 transition-all">Explore Feature <ArrowRight className="w-4 h-4" /></Link>
               </div>
             </div>
           </div>
