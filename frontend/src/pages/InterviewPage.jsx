@@ -3,6 +3,7 @@ import Vapi from '@vapi-ai/web'
 import { Canvas } from '@react-three/fiber'
 import AvatarModel from '../components/AvatarModel'
 import ScoreRing from '../components/ScoreRing'
+import CodeChallenge from '../components/CodeChallenge'
 import { ChevronLeft } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -11,11 +12,14 @@ const vapiAssistantId = import.meta.env.VITE_VAPI_ASSISTANT_ID || ''
 const vapi = vapiPublicKey ? new Vapi(vapiPublicKey) : null
 
 export default function InterviewPage() {
-  const [sessionState, setSessionState] = useState('idle') // idle | active | complete
+  const [sessionState, setSessionState] = useState('idle') // idle | active | complete | coding | results
   const [connecting, setConnecting] = useState(false)
   const [transcript, setTranscript] = useState([])
   const [isAiTalking, setIsAiTalking] = useState(false)
   const [callError, setCallError] = useState('')
+  const [codeScore, setCodeScore] = useState(null)
+  const [interviewScore, setInterviewScore] = useState(null)
+  const [isExecuting, setIsExecuting] = useState(false)
   const transcriptEndRef = useRef(null)
   const callStartedRef = useRef(false)
   const isConfigured = Boolean(vapi && vapiAssistantId)
@@ -39,7 +43,7 @@ export default function InterviewPage() {
       setCallError('')
     }
     const onCallEnd = () => {
-      setSessionState(callStartedRef.current ? 'complete' : 'idle')
+      setSessionState(callStartedRef.current ? 'coding' : 'idle')
       callStartedRef.current = false
       setIsAiTalking(false)
       window.dispatchEvent(new CustomEvent('aura:talking', { detail: false }))
@@ -114,6 +118,31 @@ export default function InterviewPage() {
 
   const handleStop = () => {
     vapi?.stop()
+  }
+
+  const handleCodeSubmit = async ({ code, language }) => {
+    setIsExecuting(true)
+    try {
+      const response = await fetch('http://localhost:8000/code/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, language })
+      })
+      const result = await response.json()
+      setCodeScore(result)
+      
+      // Calculate combined score
+      const interviewScore = 82 // Mock from Nova later
+      const combinedScore = Math.round((result.score + interviewScore) / 2)
+      
+      // Store both scores
+      setSessionState('results')
+    } catch (error) {
+      console.error('Code execution error:', error)
+      alert('Failed to execute code: ' + error.message)
+    } finally {
+      setIsExecuting(false)
+    }
   }
 
   // Visual component for the talking indicator
@@ -218,10 +247,11 @@ export default function InterviewPage() {
           )}
         </div>
 
-        {/* Right Col: Transcript OR Results */}
+        {/* Right Col: Transcript OR Coding OR Results */}
         <div className="w-full lg:w-[450px] flex flex-col gap-6 min-h-0 overflow-hidden h-full">
           
-          {sessionState !== 'complete' ? (
+          {sessionState === 'active' ? (
+            // Transcript Panel
             <div className="glass-card flex-1 flex flex-col overflow-hidden relative min-h-0">
               <div className="p-5 border-b border-white/30 font-bold bg-white/40 flex items-center justify-between h-20 flex-shrink-0">
                 <span>Live Transcript</span>
@@ -250,45 +280,62 @@ export default function InterviewPage() {
                 <div ref={transcriptEndRef} />
               </div>
             </div>
-          ) : (
+          ) : sessionState === 'coding' ? (
+            // Code Challenge Panel
+            <div className="glass-card flex-1 p-6 flex flex-col overflow-y-auto min-h-0 animate-fade-in">
+              <h2 className="text-2xl font-bold mb-2 text-[#560BAD] flex-shrink-0">Next: Code Challenge</h2>
+              <p className="text-sm text-[#555577] mb-6 flex-shrink-0">Let's verify your coding skills with a quick challenge:</p>
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <CodeChallenge onSubmit={handleCodeSubmit} isLoading={isExecuting} />
+              </div>
+            </div>
+          ) : sessionState === 'results' ? (
             // Results Panel
             <div className="glass-card flex-1 p-8 flex flex-col items-center animate-slide-in-right overflow-y-auto min-h-0">
-              <h2 className="text-3xl font-black mb-6 text-center text-[#560BAD] flex-shrink-0">Interview Complete! 🎉</h2>
+              <h2 className="text-3xl font-black mb-6 text-center text-[#560BAD] flex-shrink-0">🎉 Assessment Complete!</h2>
               
               <div className="mb-8 w-full flex justify-center flex-shrink-0">
-                <ScoreRing score={85} size={140} color="mint" label="Overall Score" />
+                <ScoreRing score={Math.round(((codeScore?.score || 0) + 82) / 2)} size={140} color="mint" label="Combined Score" />
               </div>
 
-              <div className="w-full grid grid-cols-2 gap-3 mb-8 flex-shrink-0">
+              <div className="w-full grid grid-cols-2 gap-3 mb-6 flex-shrink-0">
                 <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-[#555577] text-xs font-bold uppercase tracking-wider mb-2">Clarity</div>
-                  <div className="text-2xl font-black text-[#560BAD]">92%</div>
+                  <div className="text-[#555577] text-xs font-bold uppercase tracking-wider mb-2">Interview</div>
+                  <div className="text-2xl font-black text-[#560BAD]">82%</div>
                 </div>
                 <div className="glass-card rounded-xl p-4 text-center">
-                  <div className="text-[#555577] text-xs font-bold uppercase tracking-wider mb-2">Confidence</div>
-                  <div className="text-2xl font-black text-[#00F5D4]">78%</div>
-                </div>
-                <div className="glass-card rounded-xl p-4 text-center col-span-2">
-                  <div className="text-[#555577] text-xs font-bold uppercase tracking-wider mb-2">Technical Accuracy</div>
-                  <div className="text-2xl font-black text-[#f4a261]">88%</div>
+                  <div className="text-[#555577] text-xs font-bold uppercase tracking-wider mb-2">Code Challenge</div>
+                  <div className="text-2xl font-black text-[#00F5D4]">{codeScore?.score || 0}%</div>
                 </div>
               </div>
 
-              <div className="w-full text-left space-y-3 border-t border-white/40 pt-6 overflow-y-auto">
-                <h3 className="font-bold text-[#560BAD] mb-4 flex-shrink-0">📝 Feedback</h3>
-                <div className="flex gap-3 text-sm">
-                  <span className="text-[#06d6a0] font-bold text-lg leading-none mt-0.5 flex-shrink-0">✓</span>
-                  <span className="text-[#555577]">Great explanation of React lifecycle methods.</span>
+              {codeScore && (
+                <div className="w-full text-left p-4 bg-white/40 rounded-lg mb-6 flex-shrink-0">
+                  <div className="text-xs font-bold text-[#555577] uppercase mb-2">Code Test Results</div>
+                  <div className="text-sm text-black">
+                    <div>✓ {codeScore.passed_tests}/{codeScore.total_tests} tests passed</div>
+                    <div className="text-xs text-[#555577] mt-1">{codeScore.output}</div>
+                  </div>
                 </div>
-                <div className="flex gap-3 text-sm">
-                  <span className="text-[#06d6a0] font-bold text-lg leading-none mt-0.5 flex-shrink-0">✓</span>
-                  <span className="text-[#555577]">Clear communication style.</span>
-                </div>
-                <div className="flex gap-3 text-sm">
-                  <span className="text-[#f4a261] font-bold text-lg leading-none mt-0.5 flex-shrink-0">!</span>
-                  <span className="text-[#555577]">Could dive deeper into system design trade-offs.</span>
-                </div>
-              </div>
+              )}
+
+              <button 
+                onClick={() => {
+                  setSessionState('idle')
+                  setTranscript([])
+                  setCodeScore(null)
+                }}
+                className="btn-primary px-8 py-3 shadow-lg mt-4 flex-shrink-0"
+              >
+                Start New Interview
+              </button>
+            </div>
+          ) : (
+            // Idle State
+            <div className="glass-card flex-1 flex flex-col items-center justify-center text-center p-6">
+              <div className="text-5xl mb-4">🚀</div>
+              <h3 className="text-xl font-bold text-[#560BAD] mb-3">Ready for Interview?</h3>
+              <p className="text-sm text-[#555577] mb-6">Click the button below to start the conversation with ARIA.</p>
             </div>
           )}
 
@@ -297,3 +344,4 @@ export default function InterviewPage() {
     </div>
   )
 }
+

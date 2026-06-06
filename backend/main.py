@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.services import interviewer, repo_auditor, resume_rag, scam_detector
+from backend.services import interviewer, repo_auditor, resume_rag, scam_detector, code_executor
 
 app = FastAPI(
     title="ARIA Career Odyssey API",
@@ -22,6 +22,7 @@ app.include_router(interviewer.router)
 app.include_router(repo_auditor.router)
 app.include_router(resume_rag.router)
 app.include_router(scam_detector.router)
+app.include_router(code_executor.router)
 
 
 @app.get("/health")
