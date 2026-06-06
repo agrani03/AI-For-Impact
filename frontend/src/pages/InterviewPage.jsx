@@ -140,14 +140,14 @@ export default function InterviewPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-animate flex flex-col">
+    <div className="h-screen bg-gradient-animate flex flex-col overflow-hidden">
       <header className="p-6 flex-shrink-0">
         <Link to="/dashboard" className="inline-flex items-center gap-2 text-[#555577] font-semibold hover:text-[#560BAD]">
           <ChevronLeft className="w-5 h-5" /> Back to Dashboard
         </Link>
       </header>
 
-      <main className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-6 gap-8 overflow-hidden">
+      <main className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-6 gap-8 overflow-hidden min-h-0">
         
         {/* Left Col: 3D Avatar + Controls */}
         <div className="flex-1 flex flex-col items-center justify-center gap-6 min-h-0">
@@ -219,19 +219,19 @@ export default function InterviewPage() {
         </div>
 
         {/* Right Col: Transcript OR Results */}
-        <div className="w-full lg:w-[450px] flex flex-col gap-6 min-h-0 overflow-hidden">
+        <div className="w-full lg:w-[450px] flex flex-col gap-6 min-h-0 overflow-hidden h-full">
           
           {sessionState !== 'complete' ? (
-            <div className="glass-card flex-1 flex flex-col overflow-hidden relative">
+            <div className="glass-card flex-1 flex flex-col overflow-hidden relative min-h-0">
               <div className="p-5 border-b border-white/30 font-bold bg-white/40 flex items-center justify-between h-20 flex-shrink-0">
                 <span>Live Transcript</span>
                 <div className="w-20 h-20 flex items-center justify-center">
                   <WaveOrb />
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0 scroll-smooth">
                 {transcript.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-[#555577] text-sm text-center">
+                  <div className="flex items-center justify-center text-[#555577] text-sm text-center h-full">
                     The conversation transcript will appear here.
                   </div>
                 ) : (
