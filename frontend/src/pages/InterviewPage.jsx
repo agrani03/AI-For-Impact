@@ -48,8 +48,16 @@ export default function InterviewPage() {
       }
     }
     const onMessage = (msg) => {
+      // Only add FINAL transcripts to avoid duplicates
       if (msg.type === 'transcript' && msg.transcriptType === 'final') {
-        setTranscript(prev => [...prev, { role: msg.role, text: msg.transcript }])
+        setTranscript(prev => {
+          // Prevent duplicate if the exact same message already exists
+          const lastMsg = prev[prev.length - 1]
+          if (lastMsg && lastMsg.role === msg.role && lastMsg.text === msg.transcript) {
+            return prev
+          }
+          return [...prev, { role: msg.role, text: msg.transcript, id: Date.now() + Math.random() }]
+        })
       }
     }
     const onSpeechStart = () => {
@@ -133,19 +141,19 @@ export default function InterviewPage() {
 
   return (
     <div className="min-h-screen bg-gradient-animate flex flex-col">
-      <header className="p-6">
+      <header className="p-6 flex-shrink-0">
         <Link to="/dashboard" className="inline-flex items-center gap-2 text-[#555577] font-semibold hover:text-[#560BAD]">
           <ChevronLeft className="w-5 h-5" /> Back to Dashboard
         </Link>
       </header>
 
-      <main className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-6 gap-8 pb-12">
+      <main className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-6 gap-8 overflow-hidden">
         
         {/* Left Col: 3D Avatar + Controls */}
-        <div className="flex-1 flex flex-col items-center justify-center gap-8 relative">
+        <div className="flex-1 flex flex-col items-center justify-center gap-6 min-h-0">
           
           {/* Status Badge - Fixed position, doesn't affect layout */}
-          <div className="w-full flex justify-center">
+          <div className="w-full flex justify-center flex-shrink-0">
             <div className="glass-card px-6 py-3 rounded-full flex items-center gap-3 z-10 animate-slide-in-right">
               <span className="relative flex h-3 w-3">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${sessionState === 'active' ? 'bg-[#06d6a0]' : 'bg-[#e94560]'}`} />
@@ -157,8 +165,8 @@ export default function InterviewPage() {
             </div>
           </div>
 
-          {/* VRM Avatar Canvas */}
-          <div className="w-full h-[500px] glass-card overflow-hidden relative border-2 border-white/40 shadow-2xl">
+          {/* VRM Avatar Canvas - Fixed height */}
+          <div className="w-full h-96 glass-card overflow-hidden relative border-2 border-white/40 shadow-2xl flex-shrink-0">
             
             {/* Cozy Lo-Fi Background */}
             <div className="absolute inset-0 z-0">
@@ -182,7 +190,7 @@ export default function InterviewPage() {
           </div>
 
           {/* Controls */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-6 flex-shrink-0">
             {sessionState === 'idle' && (
               <button onClick={handleStart} disabled={connecting || !isConfigured} className="btn-primary text-xl px-12 py-5 shadow-2xl disabled:opacity-50 flex items-center gap-3">
                 {connecting ? 'Connecting...' : 'Start Interview'} 
@@ -204,32 +212,32 @@ export default function InterviewPage() {
           </div>
 
           {(callError || !isConfigured) && (
-            <div className="max-w-xl rounded-xl border border-[#e94560]/30 bg-white/80 px-5 py-3 text-sm font-semibold text-[#e94560] shadow-lg">
+            <div className="max-w-xl rounded-xl border border-[#e94560]/30 bg-white/80 px-5 py-3 text-sm font-semibold text-[#e94560] shadow-lg flex-shrink-0">
               {callError || 'Missing Vapi config. Restart Vite after setting NEXT_PUBLIC_VAPI_PUBLIC_KEY and VITE_VAPI_ASSISTANT_ID in the root .env.'}
             </div>
           )}
         </div>
 
         {/* Right Col: Transcript OR Results */}
-        <div className="w-full lg:w-[450px] flex flex-col gap-6">
+        <div className="w-full lg:w-[450px] flex flex-col gap-6 min-h-0 overflow-hidden">
           
           {sessionState !== 'complete' ? (
             <div className="glass-card flex-1 flex flex-col overflow-hidden relative">
-              <div className="p-5 border-b border-white/30 font-bold bg-white/40 flex items-center justify-between h-20">
+              <div className="p-5 border-b border-white/30 font-bold bg-white/40 flex items-center justify-between h-20 flex-shrink-0">
                 <span>Live Transcript</span>
                 <div className="w-20 h-20 flex items-center justify-center">
                   <WaveOrb />
                 </div>
               </div>
-              <div className="flex-1 overflow-y-auto p-5 space-y-4">
+              <div className="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
                 {transcript.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-[#555577] text-sm text-center">
                     The conversation transcript will appear here.
                   </div>
                 ) : (
                   transcript.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                    <div key={msg.id || i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+                      <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm break-words ${
                         msg.role === 'user' 
                           ? 'bg-[#560BAD] text-white rounded-br-sm' 
                           : 'bg-white/90 text-black border border-white/60 rounded-bl-sm'
@@ -244,14 +252,14 @@ export default function InterviewPage() {
             </div>
           ) : (
             // Results Panel
-            <div className="glass-card flex-1 p-8 flex flex-col items-center animate-slide-in-right overflow-y-auto">
-              <h2 className="text-3xl font-black mb-6 text-center text-[#560BAD]">Interview Complete! 🎉</h2>
+            <div className="glass-card flex-1 p-8 flex flex-col items-center animate-slide-in-right overflow-y-auto min-h-0">
+              <h2 className="text-3xl font-black mb-6 text-center text-[#560BAD] flex-shrink-0">Interview Complete! 🎉</h2>
               
-              <div className="mb-8 w-full flex justify-center">
+              <div className="mb-8 w-full flex justify-center flex-shrink-0">
                 <ScoreRing score={85} size={140} color="mint" label="Overall Score" />
               </div>
 
-              <div className="w-full grid grid-cols-2 gap-3 mb-8">
+              <div className="w-full grid grid-cols-2 gap-3 mb-8 flex-shrink-0">
                 <div className="glass-card rounded-xl p-4 text-center">
                   <div className="text-[#555577] text-xs font-bold uppercase tracking-wider mb-2">Clarity</div>
                   <div className="text-2xl font-black text-[#560BAD]">92%</div>
@@ -266,18 +274,18 @@ export default function InterviewPage() {
                 </div>
               </div>
 
-              <div className="w-full text-left space-y-3 border-t border-white/40 pt-6">
-                <h3 className="font-bold text-[#560BAD] mb-4">📝 Feedback</h3>
+              <div className="w-full text-left space-y-3 border-t border-white/40 pt-6 overflow-y-auto">
+                <h3 className="font-bold text-[#560BAD] mb-4 flex-shrink-0">📝 Feedback</h3>
                 <div className="flex gap-3 text-sm">
-                  <span className="text-[#06d6a0] font-bold text-lg leading-none mt-0.5">✓</span>
+                  <span className="text-[#06d6a0] font-bold text-lg leading-none mt-0.5 flex-shrink-0">✓</span>
                   <span className="text-[#555577]">Great explanation of React lifecycle methods.</span>
                 </div>
                 <div className="flex gap-3 text-sm">
-                  <span className="text-[#06d6a0] font-bold text-lg leading-none mt-0.5">✓</span>
+                  <span className="text-[#06d6a0] font-bold text-lg leading-none mt-0.5 flex-shrink-0">✓</span>
                   <span className="text-[#555577]">Clear communication style.</span>
                 </div>
                 <div className="flex gap-3 text-sm">
-                  <span className="text-[#f4a261] font-bold text-lg leading-none mt-0.5">!</span>
+                  <span className="text-[#f4a261] font-bold text-lg leading-none mt-0.5 flex-shrink-0">!</span>
                   <span className="text-[#555577]">Could dive deeper into system design trade-offs.</span>
                 </div>
               </div>
