@@ -1,10 +1,8 @@
 """GitHub Repository Auditor — Somya's feature for ARIA: Career Odyssey."""
 
 import json
-import os
 import re
 import base64
-from datetime import datetime
 from typing import Optional
 from urllib.parse import urlparse
 
