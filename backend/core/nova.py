@@ -29,21 +29,13 @@ def invoke_nova(system_prompt: str, user_message: str) -> str:
         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
     )
 
-    body = json.dumps({
-        "messages": [
-            {
-                "role": "user",
-                "content": [{"type": "text", "text": user_message}],
-            }
-        ],
-        "system": [{"type": "text", "text": system_prompt}],
-        "max_tokens": 1500,
-        "anthropic_version": "bedrock-2023-05-31",
-    })
-
     try:
-        response = client.invoke_model(modelId=BEDROCK_MODEL_ID, body=body)
-        result = json.loads(response["body"].read())
-        return result["content"][0]["text"]
+        response = client.converse(
+            modelId=BEDROCK_MODEL_ID,
+            messages=[{"role": "user", "content": [{"text": user_message}]}],
+            system=[{"text": system_prompt}],
+            inferenceConfig={"maxTokens": 1500}
+        )
+        return response["output"]["message"]["content"][0]["text"]
     except Exception as e:
         raise RuntimeError(f"Nova invocation failed: {str(e)}")
